@@ -268,8 +268,22 @@ elif systemctl is-enabled --quiet postgresql; then
     success "PostgreSQL started."
 else
     info "Enabling and starting PostgreSQL..."
-    systemctl enable --now postgresql
-    success "PostgreSQL enabled and started."
+    systemctl enable --now postgresql &
+    PID=$!
+    
+    while kill -0 $PID 2>/dev/null; do
+        echo -ne "\r[INFO] Starting PostgreSQL..."
+        sleep 0.5
+        echo -ne "\r[INFO] Starting PostgreSQL.."
+        sleep 0.5
+    done
+    
+    wait $PID
+    if [ $? -eq 0 ]; then
+        success "PostgreSQL enabled and started."
+    else
+        error "Failed to start PostgreSQL. Run: systemctl status postgresql"
+    fi
 fi
 
 echo ""
